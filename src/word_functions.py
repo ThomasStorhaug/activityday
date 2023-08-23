@@ -1,12 +1,12 @@
 from docx import Document
-from docx.table import _Cell, Table
-from docx.shared import RGBColor
+from docx.enum.section import WD_ORIENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.section import WD_ORIENT
-from docx.shared import Pt, Cm
+from docx.shared import Cm, Pt, RGBColor
+from docx.table import Table, _Cell
 from docx.text.run import Run
+
 
 def convert_to_rgb(color_hex)->RGBColor:
     """
@@ -90,9 +90,17 @@ def insert_text_in_cell(cell:_Cell, text:str, alignment:WD_ALIGN_PARAGRAPH=None,
 
     return run
 
-def create_table(postname:str, rotation:list):
+def create_table(doc:Document, postname:str, rotation:list):
     """
     Creates the table for scoring and order of groups
+    :param doc: the document in which the table will be established
     :param postname: the name of the post
     :param rotation: ordered list of each 
     """
+    table = doc.add_table(rows=16, cols=4)
+    legend = ["Klasse 1", "Poeng", "Klasse 2", "Poeng"]
+
+    for i, cell in enumerate(table.rows[0].cells):
+        insert_text_in_cell(cell, legend[i], WD_ALIGN_PARAGRAPH.CENTER)
+
+    table.style = "Grid Table 4"
