@@ -7,6 +7,7 @@ from docx.shared import Cm, Pt, RGBColor
 from docx.table import Table, _Cell
 from docx.text.run import Run
 
+import settings
 
 def convert_to_rgb(color_hex)->RGBColor:
     """
@@ -72,7 +73,7 @@ def set_text_color(run, color):
 
     run.font.color.rgb = convert_to_rgb(color)
 
-def insert_text_in_cell(cell:_Cell, text:str, alignment:WD_ALIGN_PARAGRAPH=None, font:str="Calibri", size=11)->Run:
+def insert_text_in_cell(cell:_Cell, text:str, alignment:WD_ALIGN_PARAGRAPH=None, font:str="Calibri", size=11, bold:bool=False)->Run:
     """
     Inserts text in a cell, returns the run containing the text
     :param cell: the cell where the text will be inserted
@@ -80,6 +81,7 @@ def insert_text_in_cell(cell:_Cell, text:str, alignment:WD_ALIGN_PARAGRAPH=None,
     :param alignment: optioinal, must be a WD_ALIGN_PARAGRAPH type
     :param font: optional, defaults to Calibri
     :param size: optional, defaults to 11
+    :param bold: optional
     """
     if alignment != None:
         set_horizontal_alignment(cell, alignment)
@@ -87,6 +89,7 @@ def insert_text_in_cell(cell:_Cell, text:str, alignment:WD_ALIGN_PARAGRAPH=None,
     run = cell.paragraphs[0].add_run(text)
     run.font.name = font
     run.font.size = Pt(size)
+    run.bold = bold
 
     return run
 
@@ -97,10 +100,19 @@ def create_table(doc:Document, postname:str, rotation:list):
     :param postname: the name of the post
     :param rotation: ordered list of each 
     """
-    table = doc.add_table(rows=16, cols=4)
+    table = doc.add_table(rows=len(rotation)+1, cols=4)
     legend = ["Klasse 1", "Poeng", "Klasse 2", "Poeng"]
 
     for i, cell in enumerate(table.rows[0].cells):
-        insert_text_in_cell(cell, legend[i], WD_ALIGN_PARAGRAPH.CENTER)
+        txt_run = insert_text_in_cell(cell, legend[i], WD_ALIGN_PARAGRAPH.CENTER, size=13, bold=True)
+        shade_cell(cell, settings.COLORS["dark"])
+        set_text_color(txt_run, settings.COLORS["light"])
+    
+    for group, row in zip(rotation, list(table.rows)[1:]):
+        cell1 = row.cells[0]
+        cell2 = row.cells[2]
+        insert_text_in_cell(cell1, group[0])
+        insert_text_in_cell(cell2, group[1])
 
-    table.style = "Grid Table 4"
+    table.style = "Table Grid"
+
